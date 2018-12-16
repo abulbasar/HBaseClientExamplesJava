@@ -1,0 +1,38 @@
+
+
+curl --request GET http://localhost:8080/namespaces
+curl --request GET http://localhost:8080/tables
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"namespace":"ns1"}' \
+  http://localhost:8080/create_namespace
+
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"tableName":"ns1:movies", "versions": 1, "columnFamilies": ["info"]}' \
+  http://localhost:8080/create_table
+
+curl --request GET http://localhost:8080/tables?namespace=ns1
+
+curl --request GET http://localhost:8080/describe_table?table=ns1:movies
+
+
+curl --request POST http://localhost:8080/bulk_upload_movies \
+        -H 'Content-Type: text/csv' \
+        --data-binary @"/data/movielens/movies.csv"
+
+
+curl --request POST http://localhost:8080/bulk_upload_movies \
+        --header 'Content-Type: multipart/form-data' \
+        -F file=@"/data/movielens/movies.csv"
+
+
+curl --request POST http://localhost:8080/uploadFile \
+    --header 'Content-Type: multipart/form-data' \
+    -F file=@"/data/stocks.csv"
+    
+   
+    
+curl --requets GET http://localhost:8080/downloadFile/stocks.csv -o stocks.csv
