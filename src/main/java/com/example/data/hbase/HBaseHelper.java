@@ -6,6 +6,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -434,4 +435,24 @@ public class HBaseHelper implements Closeable {
         }
         return table;
     }
+
+    public void printTableRegions(String tableName) throws IOException{
+        System.out.println("Printing regions of table: " + tableName);
+        TableName tn = TableName.valueOf(tableName);
+        RegionLocator locator = connection.getRegionLocator(tn);
+        Pair<byte[][], byte[][]> pair = locator.getStartEndKeys();
+        for (int n = 0; n < pair.getFirst().length; n++) {
+            byte[] sk = pair.getFirst()[n];
+            byte[] ek = pair.getSecond()[n];
+            System.out.println("[" + (n + 1) + "]" +
+                    " start key: " +
+                    (sk.length == 8 ? Bytes.toLong(sk) : Bytes.toStringBinary(sk)) +
+                    ", end key: " +
+                    (ek.length == 8 ? Bytes.toLong(ek) : Bytes.toStringBinary(ek)));
+        }
+        locator.close();
+    }
+
+
+
 }

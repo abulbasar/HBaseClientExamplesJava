@@ -5,6 +5,7 @@ import java.util.List;
 public class GenericResponse {
     private String status = "Success";
     private String message = null;
+    private Integer size = -1;
     private List<String> records = null;
 
     public GenericResponse(){
@@ -35,5 +36,14 @@ public class GenericResponse {
 
     public void setRecords(List<String> records) {
         this.records = records;
+        this.size = records.size();
+    }
+
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
     }
 }
