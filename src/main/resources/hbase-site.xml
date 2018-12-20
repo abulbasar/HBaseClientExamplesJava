@@ -8,10 +8,14 @@
         <value>2181</value>
     </property>
     <property>
+        <name>base.client.scanner.caching</name>
+        <value>1000</value>
+    </property>
+    <!--property>
         <name>hbase.zookeeper.property.dataDir</name>
         <value>/export/zookeeper</value>
         <description>Property from ZooKeeper's config zoo.cfg.
             The directory where the snapshot is stored.
         </description>
-    </property>
+    </property-->
 </configuration>

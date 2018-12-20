@@ -1,7 +1,5 @@
-package com.example.data.models.admin;
+package com.example.models.admin;
 
-
-import java.util.List;
 
 public class CreateNamespaceRequest {
 

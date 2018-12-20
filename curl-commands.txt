@@ -23,6 +23,8 @@ curl --request POST http://localhost:8080/bulk_upload_movies \
         --header 'Content-Type: multipart/form-data' \
         -F file=@"/data/movielens/movies.csv"
 
+curl --request GET http://localhost:8080/count/ns1:movies
+
 curl --request GET http://localhost:8080/movie/1
 
 curl --request GET http://localhost:8080/movie?q=Zulu

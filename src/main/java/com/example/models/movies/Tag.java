@@ -1,4 +1,4 @@
-package com.example.data.models.movies;
+package com.example.models.movies;
 
 public class Tag {
     private int movieId;

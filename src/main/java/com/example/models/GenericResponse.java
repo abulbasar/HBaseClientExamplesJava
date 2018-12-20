@@ -1,4 +1,4 @@
-package com.example.data.models;
+package com.example.models;
 
 import java.util.List;
 

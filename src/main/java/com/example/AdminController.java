@@ -1,11 +1,12 @@
-package com.example.data;
+package com.example;
 
-import com.example.data.hbase.HBaseHelper;
-import com.example.data.models.GenericResponse;
-import com.example.data.models.admin.CreateNamespaceRequest;
-import com.example.data.models.admin.CreateTableRequest;
-import com.example.data.models.admin.DescribeTableRequest;
+import com.example.hbase.HBaseHelper;
+import com.example.models.GenericResponse;
+import com.example.models.admin.CreateNamespaceRequest;
+import com.example.models.admin.CreateTableRequest;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -112,6 +113,16 @@ public class AdminController {
             properties.put("columnFamilies", families.collect(Collectors.joining(",")));
 
             properties.putAll(descriptor.getConfiguration());
+
+            List<Pair<byte[], byte[]>> regions = helper.getTableRegions("tableName");
+            log.info(String.format("Number of regions: %d", regions.size()));
+
+            for(int i=0;i<regions.size();++i){
+                Pair<byte[], byte[]> pair = regions.get(i);
+                String start = Bytes.toHex(pair.getFirst());
+                String end = Bytes.toHex(pair.getSecond());
+                properties.put(String.valueOf(i), String.format("{\"start\": %s, \"end\": %s", start, end));
+            }
 
             response.setRecords(properties
                     .entrySet()

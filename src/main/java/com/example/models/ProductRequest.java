@@ -1,4 +1,4 @@
-package com.example.data.models;
+package com.example.models;
 
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;

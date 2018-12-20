@@ -1,6 +1,6 @@
-package com.example.data.models.admin;
+package com.example.models.admin;
 
-import com.example.data.models.ProductRequest;
+import com.example.models.ProductRequest;
 
 import java.util.List;
 

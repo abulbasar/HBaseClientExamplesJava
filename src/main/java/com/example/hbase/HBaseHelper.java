@@ -1,6 +1,5 @@
-package com.example.data.hbase;
+package com.example.hbase;
 
-import com.jcraft.jsch.IO;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
@@ -438,20 +437,35 @@ public class HBaseHelper implements Closeable {
 
     public void printTableRegions(String tableName) throws IOException{
         System.out.println("Printing regions of table: " + tableName);
-        TableName tn = TableName.valueOf(tableName);
-        RegionLocator locator = connection.getRegionLocator(tn);
-        Pair<byte[][], byte[][]> pair = locator.getStartEndKeys();
-        for (int n = 0; n < pair.getFirst().length; n++) {
-            byte[] sk = pair.getFirst()[n];
-            byte[] ek = pair.getSecond()[n];
-            System.out.println("[" + (n + 1) + "]" +
+
+        List<Pair<byte[], byte[]>> regions = getTableRegions(tableName);
+        for(int i=0; i< regions.size();++i) {
+            Pair<byte[], byte[]> pair = regions.get(i);
+            byte[] sk = pair.getFirst();
+            byte[] ek = pair.getSecond();
+            System.out.println("[" + (i + 1) + "]" +
                     " start key: " +
                     (sk.length == 8 ? Bytes.toLong(sk) : Bytes.toStringBinary(sk)) +
                     ", end key: " +
                     (ek.length == 8 ? Bytes.toLong(ek) : Bytes.toStringBinary(ek)));
         }
-        locator.close();
     }
+
+    public java.util.List<Pair<byte[], byte[]>> getTableRegions(String tableName) throws IOException{
+        TableName tn = TableName.valueOf(tableName);
+        RegionLocator locator = connection.getRegionLocator(tn);
+        List<Pair<byte[], byte[]>> regions = new ArrayList<>();
+        Pair<byte[][], byte[][]> pair = locator.getStartEndKeys();
+        for (int n = 0; n < pair.getFirst().length; n++) {
+            byte[] sk = pair.getFirst()[n];
+            byte[] ek = pair.getSecond()[n];
+            regions.add(new Pair<>(sk, ek));
+        }
+        locator.close();
+        return regions;
+    }
+
+
 
 
 

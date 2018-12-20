@@ -1,4 +1,4 @@
-package com.example.data.models.admin;
+package com.example.models.admin;
 
 public class CreateTableRequest {
 

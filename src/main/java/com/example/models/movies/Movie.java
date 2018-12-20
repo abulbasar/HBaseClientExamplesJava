@@ -1,4 +1,4 @@
-package com.example.data.models.movies;
+package com.example.models.movies;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;

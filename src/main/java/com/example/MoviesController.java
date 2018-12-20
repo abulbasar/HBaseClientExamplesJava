@@ -1,16 +1,8 @@
-package com.example.data;
+package com.example;
 
-import com.example.CsvUtils;
-import com.example.data.hbase.HBaseHelper;
-import com.example.data.models.GenericResponse;
-import com.example.data.models.admin.CreateNamespaceRequest;
-import com.example.data.models.admin.CreateProductsRequest;
-import com.example.data.models.admin.CreateTableRequest;
-import com.example.data.models.ProductRequest;
-import com.example.data.models.movies.Movie;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
+import com.example.hbase.HBaseHelper;
+import com.example.models.GenericResponse;
+import com.example.models.movies.Movie;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -20,11 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.rmi.MarshalledObject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -163,8 +150,6 @@ public class MoviesController {
             response.setMessage(ex.getMessage());
             response.setStatus("Failed");
         }
-
-
 
         return response;
 
