@@ -1,7 +1,11 @@
 <configuration>
+    <!--
+    Check out the properties here
+    https://github.com/apache/hbase/blob/master/hbase-server/src/test/resources/hbase-site.xml
+    -->
     <property>
         <name>hbase.zookeeper.quorum</name>
-        <value>localhost:2181</value>
+        <value>192.168.1.18:2181</value>
     </property>
     <property>
         <name>hbase.zookeeper.property.clientPort</name>
@@ -11,11 +15,17 @@
         <name>base.client.scanner.caching</name>
         <value>1000</value>
     </property>
-    <!--property>
-        <name>hbase.zookeeper.property.dataDir</name>
-        <value>/export/zookeeper</value>
-        <description>Property from ZooKeeper's config zoo.cfg.
-            The directory where the snapshot is stored.
-        </description>
-    </property-->
+    <property>
+        <name>zookeeper.session.timeout</name>
+        <value>60000</value>
+    </property>
+
+    <property>
+        <name>zookeeper.znode.parent</name>
+        <value>/hbase-unsecure</value>
+
+    </property>
+
+    <!-- You can find the above values HBase master UI http://<hmaster:60010>
+    of the cluster you are trying to connect -->
 </configuration>

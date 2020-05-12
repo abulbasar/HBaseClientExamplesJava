@@ -39,19 +39,12 @@ public class MoviesController {
              Table moviesTable = helper.getTable("ns1:movies");
              Object[] results = new Object[puts.size()];
              moviesTable.batch(puts, results);
-        }catch (InterruptedException ex){
+             log.info("Number of records: " + results.length);
+        }catch (InterruptedException | IOException ex){
             ex.printStackTrace();
             response.setStatus("Failed");
             response.setMessage(ex.getMessage());
         }
-        catch(IOException ex){
-            ex.printStackTrace();
-            response.setStatus("Failed");
-            response.setMessage(ex.getMessage());
-        }
-
-
-
         return response;
     }
 
@@ -71,37 +64,9 @@ public class MoviesController {
     }
 
     @GetMapping("/count/{tableName}")
-    public long countRecordInTable(@PathVariable String tableName){
-        log.info(String.format("tableName: %s", tableName));
-        long count = 0;
-        try {
-            Table table = helper.getTable(tableName);
-
-            FilterList filters = new FilterList();
-            filters.addFilter(new FirstKeyOnlyFilter());
-            filters.addFilter(new KeyOnlyFilter());
-
-            Scan scan = new Scan();
-            scan.setFilter(filters);
-
-            ResultScanner scanner = table.getScanner(scan);
-
-            long starTime = System.currentTimeMillis();
-            try {
-                count = StreamSupport.stream(scanner.spliterator(), false).count();
-            } finally {
-                scanner.close();
-            }
-            long endTime = System.currentTimeMillis();
-            log.info(String.format("Counting took %d milli secs", (endTime - starTime) ));
-
-        }catch (IOException ex){
-            ex.printStackTrace();
-            count = -1;
-        }
-        return count;
+    public long countRecordInTable(@PathVariable String tableName) throws IOException {
+        return helper.count(tableName);
     }
-
 
 
     @GetMapping("/movie")
@@ -125,12 +90,11 @@ public class MoviesController {
             ResultScanner scanner = table.getScanner(scan);
 
             Stream<Result> rows = StreamSupport.stream(scanner.spliterator(), false);
-            movies = rows.map(r -> Movie.parse(r)).collect(Collectors.toList());
+            movies = rows.map(Movie::parse).collect(Collectors.toList());
             scanner.close();
 
         }catch (IOException ex){
             ex.printStackTrace();
-
         }
         return movies;
     }

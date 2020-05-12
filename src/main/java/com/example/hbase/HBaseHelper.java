@@ -4,6 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.slf4j.Logger;
@@ -12,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.StreamSupport;
+
 import org.apache.hadoop.hbase.HBaseConfiguration;
 
 /**
@@ -28,8 +31,21 @@ public class HBaseHelper implements Closeable {
     private Admin admin = null;
     private Map<String, Table> tablesByName = new HashMap<>();
 
+    private static final byte[] POSTFIX = new byte[] { 0x00 };
+
+
+
     private HBaseHelper(Configuration configuration) throws IOException {
+
+
         this.configuration = configuration;
+
+        // Increase RPC timeout, in case of a slow computation
+        configuration.setLong("hbase.rpc.timeout", 1000);
+        // Default is 1, set to a higher value for faster scanner.next(..)
+        configuration.setLong("hbase.client.scanner.caching", 1000);
+        configuration.setLong("hbase.client.scanner.timeout.period", 120000);
+
         this.connection = ConnectionFactory.createConnection(configuration);
         this.admin = connection.getAdmin();
     }
@@ -113,6 +129,7 @@ public class HBaseHelper implements Closeable {
 
     public boolean existsTable(String table)
             throws IOException {
+
         return existsTable(TableName.valueOf(table));
     }
 
@@ -420,6 +437,32 @@ public class HBaseHelper implements Closeable {
         }
     }
 
+    public long count(String tableName) throws IOException {
+        log.info(String.format("tableName: %s", tableName));
+        long count;
+
+        Table table = helper.getTable(tableName);
+
+        FilterList filters = new FilterList();
+        filters.addFilter(new FirstKeyOnlyFilter());
+        filters.addFilter(new KeyOnlyFilter());
+
+        Scan scan = new Scan();
+        scan.setFilter(filters);
+
+        ResultScanner scanner = table.getScanner(scan);
+
+        long starTime = System.currentTimeMillis();
+        try {
+            count = StreamSupport.stream(scanner.spliterator(), false).count();
+        } finally {
+            scanner.close();
+        }
+        long endTime = System.currentTimeMillis();
+        log.info(String.format("Counting took %d milli secs", (endTime - starTime) ));
+        return count;
+    }
+
     public Table getTable(String tableName){
         Table table = null;
         if(tablesByName.containsKey(tableName)){
@@ -463,6 +506,58 @@ public class HBaseHelper implements Closeable {
         }
         locator.close();
         return regions;
+    }
+
+    public void scanWithPaging(String tableName, int pageSize) throws IOException {
+        Table table = getTable(tableName);
+
+        Filter filter = new PageFilter(pageSize);
+
+        int totalRows = 0;
+        byte[] lastRow = null;
+        while (true) {
+            Scan scan = new Scan();
+            scan.setFilter(filter);
+            if (lastRow != null) {
+                byte[] startRow = Bytes.add(lastRow, POSTFIX);
+                System.out.println("start row: " +
+                        Bytes.toStringBinary(startRow));
+                scan.setStartRow(startRow);
+            }
+            ResultScanner scanner = table.getScanner(scan);
+            int localRows = 0;
+            Result result;
+            while ((result = scanner.next()) != null) {
+                System.out.println(localRows++ + ": " + result);
+                totalRows++;
+                lastRow = result.getRow();
+            }
+            scanner.close();
+            if (localRows == 0) break;
+        }
+        System.out.println("total rows: " + totalRows);
+    }
+
+    public long increment(String tableName, String cf, String col, String rowKey, long amount) throws IOException {
+        final Table table = getTable(tableName);
+        Increment increment = new Increment(Bytes.toBytes(rowKey));
+        increment.addColumn(
+                Bytes.toBytes(cf),
+                Bytes.toBytes(col),
+                amount
+        );
+
+        final Result result = table.increment(increment);
+
+        long count = 0;
+
+        for (Cell cell : result.rawCells()) {
+            count = Bytes.toLong(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
+            System.out.println("Cell: " + cell + " Value: " + count);
+        }
+
+        return count;
+
     }
 
 
