@@ -3,19 +3,31 @@ package com.example;
 import com.example.hbase.HBaseHelper;
 import com.example.models.GenericResponse;
 import com.example.models.movies.Movie;
-import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.filter.*;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
+import org.apache.hadoop.hbase.filter.FilterList;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
+import org.apache.hadoop.hbase.filter.SubstringComparator;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @RestController
@@ -78,8 +90,8 @@ public class MoviesController {
             Table table = helper.getTable("ns1:movies");
 
             FilterList filters = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-            filters.addFilter(new SingleColumnValueFilter(Movie.cf, Movie.titleCol
-                            , CompareFilter.CompareOp.GREATER_OR_EQUAL, Bytes.toBytes(q)));
+            filters.addFilter(new SingleColumnValueFilter(Movie.cf, Movie.titleCol, CompareOp.EQUAL,
+                new SubstringComparator(q)));
 
             Scan scan = new Scan();
             scan.setFilter(filters);
