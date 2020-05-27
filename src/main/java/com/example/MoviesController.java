@@ -90,8 +90,7 @@ public class MoviesController {
             Table table = helper.getTable("ns1:movies");
 
             FilterList filters = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-            filters.addFilter(new SingleColumnValueFilter(Movie.cf, Movie.titleCol, CompareOp.EQUAL,
-                new SubstringComparator(q)));
+            filters.addFilter(new SingleColumnValueFilter(Movie.cf, Movie.titleCol, CompareOp.EQUAL, new SubstringComparator(q)));
 
             Scan scan = new Scan();
             scan.setFilter(filters);
@@ -119,8 +118,12 @@ public class MoviesController {
         System.out.println(movie.toJson());
 
         Table table = helper.getTable("ns1:movies");
+
+
+
         try{
             table.put(movie.toPut());
+
         }catch (IOException ex){
             log.error(ex.getMessage(), ex);
             response.setMessage(ex.getMessage());

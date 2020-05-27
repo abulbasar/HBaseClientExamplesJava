@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 
+# ADMINISTRATIVE
 curl --request GET http://localhost:8291/namespaces
 curl --request GET http://localhost:8291/tables
 
@@ -9,6 +10,9 @@ curl --header "Content-Type: application/json" \
   --data '{"namespace":"ns1"}' \
   http://localhost:8291/create_namespace
 
+
+
+# DML
 
 curl --header "Content-Type: application/json" \
   --request POST \

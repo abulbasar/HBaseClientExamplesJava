@@ -1,5 +1,6 @@
 package com.example.hbase;
 
+import com.google.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -33,9 +35,7 @@ public class HBaseHelper implements Closeable {
 
     private static final byte[] POSTFIX = new byte[] { 0x00 };
 
-
-
-    private HBaseHelper(Configuration configuration) throws IOException {
+    private HBaseHelper(Configuration configuration) throws IOException, ServiceException {
 
 
         this.configuration = configuration;
@@ -46,15 +46,28 @@ public class HBaseHelper implements Closeable {
         configuration.setLong("hbase.client.scanner.caching", 1000);
         configuration.setLong("hbase.client.scanner.timeout.period", 120000);
 
+        //Maximum retries for failed transactions.
+        configuration.setInt("hbase.client.retries.number", 15);
+
+        //General client pause value. Used mostly as value to wait before running a retry of a failed get, region lookup, etc.
+        configuration.setInt("hbase.client.pause", 100);
+
+
+
+
+        HBaseAdmin.checkHBaseAvailable(this.configuration);
+
         this.connection = ConnectionFactory.createConnection(configuration);
         this.admin = connection.getAdmin();
+
+
     }
 
     public static HBaseHelper getInstance(Configuration configuration) {
         if(helper == null){
             try {
                 helper = new HBaseHelper(configuration);
-            }catch (IOException ex){
+            }catch (IOException | ServiceException  ex){
                 ex.printStackTrace();
             }
         }
@@ -109,6 +122,10 @@ public class HBaseHelper implements Closeable {
         log.info(String.format("Number of tables: %d", names.size()));
 
         return names;
+    }
+
+    public void flush(String tableName) throws IOException {
+        admin.flush(TableName.valueOf(tableName));
     }
 
     public void createNamespace(String namespace) throws IOException {
@@ -508,34 +525,20 @@ public class HBaseHelper implements Closeable {
         return regions;
     }
 
-    public void scanWithPaging(String tableName, int pageSize) throws IOException {
+    public Stream<Result> scanWithPaging(String tableName, int pageSize, byte[] lastRow) throws IOException {
         Table table = getTable(tableName);
-
         Filter filter = new PageFilter(pageSize);
-
-        int totalRows = 0;
-        byte[] lastRow = null;
-        while (true) {
-            Scan scan = new Scan();
-            scan.setFilter(filter);
-            if (lastRow != null) {
-                byte[] startRow = Bytes.add(lastRow, POSTFIX);
-                System.out.println("start row: " +
-                        Bytes.toStringBinary(startRow));
-                scan.setStartRow(startRow);
-            }
-            ResultScanner scanner = table.getScanner(scan);
-            int localRows = 0;
-            Result result;
-            while ((result = scanner.next()) != null) {
-                System.out.println(localRows++ + ": " + result);
-                totalRows++;
-                lastRow = result.getRow();
-            }
-            scanner.close();
-            if (localRows == 0) break;
+        Scan scan = new Scan();
+        scan.setFilter(filter);
+        if (lastRow != null) {
+            byte[] startRow = Bytes.add(lastRow, POSTFIX);
+            System.out.println("start row: " + Bytes.toStringBinary(startRow));
+            scan.setStartRow(startRow);
         }
-        System.out.println("total rows: " + totalRows);
+        ResultScanner scanner = table.getScanner(scan);
+        Stream<Result> resultStream = StreamSupport.stream(scanner.spliterator(), false);
+        scanner.close();
+        return resultStream;
     }
 
     public long increment(String tableName, String cf, String col, String rowKey, long amount) throws IOException {

@@ -7,6 +7,7 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import org.springframework.util.Assert;
 
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
