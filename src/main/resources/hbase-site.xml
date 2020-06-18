@@ -5,7 +5,7 @@
     -->
     <property>
         <name>hbase.zookeeper.quorum</name>
-        <value>192.168.1.18:2181</value>
+        <value>127.0.0.1:2181</value>
     </property>
     <property>
         <name>hbase.zookeeper.property.clientPort</name>
