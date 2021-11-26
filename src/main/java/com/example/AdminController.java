@@ -62,7 +62,7 @@ public class AdminController {
     }
 
     @GetMapping("/tables")
-    public GenericResponse tables(@RequestParam(value="ns", defaultValue = "<all>") String namespace) {
+    public GenericResponse tables(@RequestParam(value="namespace", defaultValue = "<all>") String namespace) {
         log.info(String.format("Namespace: %s", namespace));
 
         GenericResponse response = new GenericResponse();

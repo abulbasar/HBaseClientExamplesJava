@@ -51,6 +51,7 @@ public class HBaseHelper implements Closeable {
 
         //General client pause value. Used mostly as value to wait before running a retry of a failed get, region lookup, etc.
         configuration.setInt("hbase.client.pause", 100);
+        configuration.set("zookeeper.znode.parent", "/hbase");
 
 
 
